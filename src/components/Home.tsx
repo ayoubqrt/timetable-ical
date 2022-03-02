@@ -7,7 +7,7 @@ import Image from 'next/image'
 import loading from '../../public/images/oval.svg'
 import moment from 'moment';
 import styles from './Home.module.css'
-// e
+
 moment.locale('fr');
 
 export default function Home() {
