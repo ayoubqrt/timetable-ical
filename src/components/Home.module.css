@@ -1,0 +1,19 @@
+.component {
+    margin: 10px
+}
+
+.form {
+    overflow: hidden;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+}
+
+.input {
+    width: 100%;
+    margin: 10px;
+}
+
+.invisible {
+    visibility: hidden;
+}

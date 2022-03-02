@@ -1,0 +1,33 @@
+.card {
+    padding: 5px;
+    margin: 10px;
+    border: 1px solid black;
+    box-shadow: 1em black;
+}
+
+.currentCourse {
+    border: 1px solid red;
+}
+
+.paginButton {
+    margin: 4px;
+    opacity: 0.3;
+}
+
+.buttonRight {
+    margin-left: auto;
+}
+
+.buttons {
+    display: flex;
+    position: absolute;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+}
+
+.paginButton:active {
+    /* transition: opacity 1s; */
+    animation: changeOpa 0.5s ease-out 1;
+
+}

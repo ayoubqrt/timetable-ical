@@ -1,0 +1,16 @@
+export declare const EVENT_BEGIN_KEY_VALUE = "BEGIN:VEVENT";
+export declare const EVENT_END_KEY_VALUE = "END:VEVENT";
+export declare const CALENDAR_BEGIN_KEY_VALUE = "BEGIN:VCALENDAR";
+export declare const CALENDAR_END_KEY_VALUE = "END:VCALENDAR";
+export declare const VALARM_RECURSION_MAX_COUNT = 5000;
+export declare const ALWAYS_STRING_VALUES: string[];
+export declare const MAILTO_KEY_WITH_DELIMITER: string;
+export declare const MAILTO_KEY: string;
+export declare const RRULE_KEY: string;
+export declare const RRULE_ICAL_KEY: string;
+export declare const ATTENDEE_KEY: string;
+export declare const ORGANIZER_KEY: string;
+export declare const ALARMS_KEY: string;
+export declare const UID_KEY: string;
+export declare const INVALID_DATE_ERROR: string;
+export declare const WRONG_FORMAT_ERROR: string;
