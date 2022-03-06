@@ -39,7 +39,6 @@ export default function Home() {
 
 	
 	useEffect(() => {
-		localStorage.removeItem("ics")
 		const icsLocal = getIcsInLocalStorage();
 		if(icsLocal) {
 			const durationInHours = moment().diff(moment(icsLocal.timestamp), 'hours')
