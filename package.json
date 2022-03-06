@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "chai": "^4.3.6",
+    "ical2json": "^3.0.0",
     "luxon": "^2.3.1",
     "mocha": "^9.2.1",
     "moment": "^2.29.1",
