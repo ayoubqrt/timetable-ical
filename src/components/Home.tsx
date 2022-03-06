@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Calendar from '../../src/components/Calendar';
 import Image from 'next/image'
 import loading from '../../public/images/oval.svg'
+import reload from '../../public/images/reload.svg'
 import moment from 'moment';
 import styles from './Home.module.css'
 const ical2json = require("ical2json");
@@ -38,6 +39,7 @@ export default function Home() {
 
 	
 	useEffect(() => {
+		localStorage.removeItem("ics")
 		const icsLocal = getIcsInLocalStorage();
 		if(icsLocal) {
 			const durationInHours = moment().diff(moment(icsLocal.timestamp), 'hours')
@@ -73,13 +75,22 @@ export default function Home() {
 					setIcsValid(true);
 				} catch (err) {
 					setError("Erreur lors de la lecture du calendrier");
+					setIsFetching(false);
 				}
 
 			}
 		} catch (err: any) {
 			console.log(err);
+			setIsFetching(false);
 			setError(err);
 		}
+	}
+
+	const forceReloadIcs = () => {
+		setIcsValid(false);
+		const icsLocal = getIcsInLocalStorage();
+
+		retrieveIcsNetyPareo(null, icsLocal.url);
 	}
 
 	const saveIcsInLocalStorage = (events: VEvent[], urlIcs: string) => {
@@ -103,7 +114,12 @@ export default function Home() {
 
 	if (isIcsValid) {
 		return (
-			<Calendar url={urlNetypareo} eventsIcs={icsEvents} />
+			<>
+				<button className={styles.reload} onClick={() => forceReloadIcs()}>			
+					<Image alt="Rafraîchir" src={reload} height={10} width={10} />
+				</button>
+				<Calendar url={urlNetypareo} eventsIcs={icsEvents} />
+			</>
 		)
 	}
 
@@ -112,12 +128,12 @@ export default function Home() {
 
 	return (
 		<>
-			<form onSubmit={retrieveIcsNetyPareo} id='form' className={styles.form}>
-				<input type="text" placeholder='Entrez votre url' className={styles.input}
+			<form onSubmit={(event) => retrieveIcsNetyPareo(event)} id='form' className={styles.form}>
+				<input disabled={isFetching} type="text" placeholder='Entrez votre url' className={styles.input}
 					value={urlNetypareo} onChange={(event) => setUrl(event.target.value)}>
 
 				</input>
-				<button type="submit" className={styles.component}>Valider</button>
+				<button type="submit" className={styles.component} disabled={isFetching}>Valider</button>
 			</form>
 			<p>{error}</p>
 

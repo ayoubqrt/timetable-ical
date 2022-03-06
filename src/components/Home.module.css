@@ -17,3 +17,7 @@
 .invisible {
     visibility: hidden;
 }
+
+.reload {
+    float: right;
+}

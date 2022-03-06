@@ -36,3 +36,7 @@ button {
   cursor: pointer;
   box-shadow: rgba(0, 9, 61, 0.2) 0px 4px 8px 0px;
 }
+
+button:disabled {
+  opacity: 0.3;
+}
