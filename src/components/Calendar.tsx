@@ -131,8 +131,8 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
       const eventsOfDay = getEventsOfDay(courses, offsetDayNumber);
       const eventsOfDayElements = renderCoursesByDay(eventsOfDay);
 
-      const dayElement = <div style={{width: "16.6666667%"}}>
-        {offsetDay.format("dddd")}
+      const dayElement = <div className={styles.day}>
+        <div className={styles.dayTitle}>{offsetDay.format("dddd")}</div>
         {eventsOfDayElements}
       </div>
       eventsOfWeekElements.push(dayElement);
@@ -144,7 +144,7 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
         Semaine du {firstWeekDay} :
         <br />
         <br />
-        <div style={{display: 'flex', width: "100%"}}>
+        <div className={styles.eventsOfWeek}>
           {eventsOfWeekElements}
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
           <div>
             {renderCoursesByDay()}
           </div>
-        </> : <div style={{display: 'flex', flexDirection: 'row'}}>
+        </> : <div className={styles.weekCourses}>
             {renderCoursesByWeek()}
           </div>
       }
