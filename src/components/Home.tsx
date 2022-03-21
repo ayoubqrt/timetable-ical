@@ -5,6 +5,8 @@ import loading from '../../public/images/oval.svg'
 import reload from '../../public/images/reload.svg'
 import moment from 'moment';
 import styles from './Home.module.css'
+import toast, { Toaster } from 'react-hot-toast'
+
 const ical2json = require("ical2json");
 
 moment.locale('fr');
@@ -41,55 +43,79 @@ export default function Home() {
 	useEffect(() => {
 		const icsLocal = getIcsInLocalStorage();
 		if(icsLocal) {
-			const durationInHours = moment().diff(moment(icsLocal.timestamp), 'hours')
+			const durationInHours = moment().diff(moment(icsLocal.timestamp), 'hours');
 			if(durationInHours > 24) {
 				retrieveIcsNetyPareo(null, icsLocal.url);
 			} else {
 				setIcsEvents(icsLocal.ics)
 				setIcsValid(true);
+				//async refresh of edt
+				retrieveAsyncIcsNetyPareo(icsLocal.url);
 			}
 		}
 	}, []);
 
-	const retrieveIcsNetyPareo = async (event: any, url?: string) => {
+	const retrieveAsyncIcsNetyPareo = (url: string) => {
+		toast.promise(
+			retrieveIcsNetyPareo(null, url),
+			{
+				loading: 'Mis à jour de l\'EDT...',
+				success: <b>EDT mis à jour avec succès</b>,
+				error: <b>Erreur lors de la mis à jour de l&apos;EDT.</b>,
+			}
+		);
+	}
+
+	const retrieveIcsNetyPareo = async (event: any, url?: string, asyncRefresh?: boolean) => {
 		if(event) event.preventDefault();
+
 		setIsFetching(true);
+
 		setError("");
 
 		const urlIcs = url ? url : urlNetypareo;
 
+		const jsonRes = await fetchApiNetypareo(urlIcs);
+
+		try {
+			const calendarsJSON = ical2json.convert(jsonRes.ics);
+			const calendar: VCalendar = calendarsJSON.VCALENDAR[0];
+			
+			setIcsEvents(calendar.VEVENT);
+			saveIcsInLocalStorage(calendar.VEVENT, urlIcs);
+
+			setIsFetching(false);
+
+		} catch (err) {
+			setError("Erreur lors de la lecture du calendrier");
+			setIsFetching(false);
+		}
+
+	}
+
+	const fetchApiNetypareo = async (urlIcs: string): Promise<any> => {
 		try {
 			const res = await fetch(`/api/getIcs?url=${urlIcs}`);
 			const jsonRes = await res.json();
-
+			
 			if (!res.ok) {
 				throw jsonRes.err;
-			} else {
-				try {
-					const calendarsJSON = ical2json.convert(jsonRes.ics);
-					const calendar: VCalendar = calendarsJSON.VCALENDAR[0];
-					
-					setIcsEvents(calendar.VEVENT);
-					saveIcsInLocalStorage(calendar.VEVENT, urlIcs)
-					setIcsValid(true);
-				} catch (err) {
-					setError("Erreur lors de la lecture du calendrier");
-					setIsFetching(false);
-				}
-
 			}
+
+			return jsonRes;
 		} catch (err: any) {
 			console.log(err);
 			setIsFetching(false);
 			setError(err);
 		}
+
+		return [];
 	}
 
 	const forceReloadIcs = () => {
-		setIcsValid(false);
 		const icsLocal = getIcsInLocalStorage();
 
-		retrieveIcsNetyPareo(null, icsLocal.url);
+		retrieveAsyncIcsNetyPareo(icsLocal.url);
 	}
 
 	const saveIcsInLocalStorage = (events: VEvent[], urlIcs: string) => {
@@ -114,6 +140,10 @@ export default function Home() {
 	if (isIcsValid) {
 		return (
 			<>
+				<Toaster
+					position="top-right"
+					reverseOrder={false}
+				/>
 				<button className={styles.reload} onClick={() => forceReloadIcs()}>			
 					<Image alt="Rafraîchir" src={reload} height={10} width={10} />
 				</button>

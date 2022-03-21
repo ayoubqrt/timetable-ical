@@ -5,14 +5,17 @@ import 'moment/locale/fr';
 import { VEvent } from './Home';
 
 export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEvent[]}) {
-  const [courses, setCourses] = useState<VEvent[]>(eventsIcs);
+  const [courses, setCourses] = useState<VEvent[]>([]);
   const [coursesOfDay, setCoursesOfDay] = useState<VEvent[]>([]);
   const [offsetDay, setOffsetDay] = useState(0);
   moment().locale('fr');
 
+  useEffect(() => {
+    setCourses(eventsIcs);
+    console.log("edt refreshed")
+  }, [eventsIcs]);
 
   useEffect(() => {
-
     const coursesOfDay = getEventsOfDay(courses, offsetDay);
     
     setCoursesOfDay(coursesOfDay);
