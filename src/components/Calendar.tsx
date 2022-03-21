@@ -30,6 +30,10 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     
     setCoursesOfWeek(coursesOfWeek);
   }, [offsetWeek, courses]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  })
   
   const getEventsOfDay = (events: VEvent[], offsetDay: number) => {
     const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('LL');
