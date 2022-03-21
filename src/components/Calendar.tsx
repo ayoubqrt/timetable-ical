@@ -132,7 +132,7 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
       const eventsOfDayElements = renderCoursesByDay(eventsOfDay);
 
       const dayElement = <div className={styles.day}>
-        <div className={styles.dayTitle}>{offsetDay.format("dddd")}</div>
+        <div className={styles.dayTitle}>{offsetDay.format("dddd DD/MM")}</div>
         {eventsOfDayElements}
       </div>
       eventsOfWeekElements.push(dayElement);

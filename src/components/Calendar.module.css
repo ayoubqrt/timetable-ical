@@ -52,4 +52,8 @@
     .eventsOfWeek {
         display: flex;
     }
+
+    .dayTitle {
+        text-align: center;
+    }
 }
