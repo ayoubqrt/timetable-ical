@@ -6,9 +6,7 @@ import reload from '../../public/images/reload.svg'
 import moment from 'moment';
 import styles from './Home.module.css'
 import toast, { Toaster } from 'react-hot-toast'
-
 const ical2json = require("ical2json");
-
 moment.locale('fr');
 
 interface VCalendar {
@@ -32,13 +30,16 @@ export interface VEvent {
 	SUMMARY: string;
 }
 
+export interface ICSJson {
+	ics: string;
+}
+
 export default function Home() {
 	const [urlNetypareo, setUrl] = useState("");
 	const [icsEvents, setIcsEvents] = useState<VEvent[]>([]);
 	const [error, setError] = useState("");
 	const [isIcsValid, setIcsValid] = useState(false);
 	const [isFetching, setIsFetching] = useState(false);
-
 	
 	useEffect(() => {
 		const icsLocal = getIcsInLocalStorage();
@@ -49,6 +50,7 @@ export default function Home() {
 			} else {
 				setIcsEvents(icsLocal.ics)
 				setIcsValid(true);
+
 				//async refresh of edt
 				retrieveAsyncIcsNetyPareo(icsLocal.url);
 			}
@@ -59,41 +61,41 @@ export default function Home() {
 		toast.promise(
 			retrieveIcsNetyPareo(null, url),
 			{
-				loading: 'Mis à jour de l\'EDT...',
+				loading: 'Mise à jour de l\'EDT...',
 				success: <b>EDT mis à jour avec succès</b>,
 				error: <b>Erreur lors de la mis à jour de l&apos;EDT.</b>,
 			}
 		);
 	}
 
-	const retrieveIcsNetyPareo = async (event: any, url?: string, asyncRefresh?: boolean) => {
+	const retrieveIcsNetyPareo = async (event: any, url?: string) => {
 		if(event) event.preventDefault();
 
 		setIsFetching(true);
-
 		setError("");
 
 		const urlIcs = url ? url : urlNetypareo;
-
 		const jsonRes = await fetchApiNetypareo(urlIcs);
 
-		try {
-			const calendarsJSON = ical2json.convert(jsonRes.ics);
-			const calendar: VCalendar = calendarsJSON.VCALENDAR[0];
-			
-			setIcsEvents(calendar.VEVENT);
-			saveIcsInLocalStorage(calendar.VEVENT, urlIcs);
+		if(jsonRes) {
+			try {
+				const calendarsJSON = ical2json.convert(jsonRes.ics);
+				const calendar: VCalendar = calendarsJSON.VCALENDAR[0];
+				
+				setIcsEvents(calendar.VEVENT);
+				saveIcsInLocalStorage(calendar.VEVENT, urlIcs);
+	
+				setIsFetching(false);
+			} catch (err) {
+				setError("Erreur lors de la lecture du calendrier");
+				setIsFetching(false);
 
-			setIsFetching(false);
-
-		} catch (err) {
-			setError("Erreur lors de la lecture du calendrier");
-			setIsFetching(false);
+				return Promise.reject(new Error());
+			}
 		}
-
 	}
 
-	const fetchApiNetypareo = async (urlIcs: string): Promise<any> => {
+	const fetchApiNetypareo = async (urlIcs: string): Promise<ICSJson | null> => {
 		try {
 			const res = await fetch(`/api/getIcs?url=${urlIcs}`);
 			const jsonRes = await res.json();
@@ -107,9 +109,9 @@ export default function Home() {
 			console.log(err);
 			setIsFetching(false);
 			setError(err);
-		}
 
-		return [];
+			return Promise.reject(new Error());
+		}
 	}
 
 	const forceReloadIcs = () => {
@@ -144,9 +146,11 @@ export default function Home() {
 					position="top-right"
 					reverseOrder={false}
 				/>
-				<button className={styles.reload} onClick={() => forceReloadIcs()}>			
-					<Image alt="Rafraîchir" src={reload} height={10} width={10} />
-				</button>
+				<div className={styles.reload}>
+					<button onClick={() => forceReloadIcs()}>			
+						<Image alt="Rafraîchir" src={reload} height={10} width={10} />
+					</button>
+				</div>
 				<Calendar url={urlNetypareo} eventsIcs={icsEvents} />
 			</>
 		)
@@ -162,7 +166,7 @@ export default function Home() {
 					value={urlNetypareo} onChange={(event) => setUrl(event.target.value)}>
 
 				</input>
-				<button type="submit" className={styles.component} disabled={isFetching}>Valider</button>
+				<button type="submit" className={`${styles.component} ${styles.reload}`} disabled={isFetching}>Valider</button>
 			</form>
 			<p>{error}</p>
 

@@ -3,12 +3,16 @@ import moment from 'moment';
 import styles from './Calendar.module.css'
 import 'moment/locale/fr';
 import { VEvent } from './Home';
+moment().locale('fr');
+
 
 export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEvent[]}) {
   const [courses, setCourses] = useState<VEvent[]>([]);
   const [coursesOfDay, setCoursesOfDay] = useState<VEvent[]>([]);
+  const [coursesOfWeek, setCoursesOfWeek] = useState<VEvent[]>([]);
   const [offsetDay, setOffsetDay] = useState(0);
-  moment().locale('fr');
+  const [offsetWeek, setOffsetWeek] = useState(0);
+  const [isDayView, setIsDayView] = useState(true);
 
   useEffect(() => {
     setCourses(eventsIcs);
@@ -20,6 +24,12 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     
     setCoursesOfDay(coursesOfDay);
   }, [offsetDay, courses]);
+
+  useEffect(() => {
+    const coursesOfWeek = getEventsOfWeek(courses, offsetWeek);
+    
+    setCoursesOfWeek(coursesOfWeek);
+  }, [offsetWeek, courses]);
   
   const getEventsOfDay = (events: VEvent[], offsetDay: number) => {
     const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('LL');
@@ -35,11 +45,54 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
   
     return eventsOfDay;
   }
+
+  const addOffset = () => {
+    if(isDayView) {
+      setOffsetDay(val => val + 1);
+    } else {
+      setOffsetWeek(val => val + 7);
+    }
+  }
+
+  const minusOffset = () => {
+    if(isDayView) {
+      setOffsetDay(val => val - 1);
+    } else {
+      setOffsetWeek(val => val - 7);
+    }    
+  }
+
+  const resetOffset = () => {
+    if(isDayView) {
+      setOffsetDay(0);
+    } else {
+      setOffsetWeek(0);
+    }    
+  }
+
+  const getEventsOfWeek = (events: VEvent[], offsetWeek: number) => {
+    const weekStartDate = moment().startOf('day').add(offsetWeek, 'days').weekday(0);
+    const weekEndDate = moment().startOf('day').add(offsetWeek, 'days').weekday(6);
+
+    const eventsOfWeek = events.filter((event) => {
+      const dateEvent = moment(event.DTSTART);
+      
+      if(dateEvent.isBetween(weekStartDate, weekEndDate)) {
+        return event;
+      }
+      
+      return null;
+    });
   
-  const renderCourses = () => {    
+    return eventsOfWeek;
+  }
+  
+  const renderCoursesByDay = (customCoursesOfDay?: VEvent[]) => {    
     const currentMoment = moment();
+
+    const courses = customCoursesOfDay ? customCoursesOfDay : coursesOfDay;
   
-    return coursesOfDay.map((cours) => {
+    return courses.map((cours) => {
       const startCourse = moment(cours.DTSTART);
       const endCourse = moment(cours.DTEND);
   
@@ -48,7 +101,7 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
       let classNames = `${styles.card}`;
       isCurrentCourse ? classNames += ` ${styles.currentCourse}` : null; 
   
-      const durationInMinutes = endCourse.diff(startCourse, 'minutes')
+      const durationInMinutes = endCourse.diff(startCourse, 'minutes');
       const duration = moment().startOf('day').add(durationInMinutes, 'minutes').format('HH[H]mm');
   
       return <div key={cours.UID} className={classNames}>
@@ -59,19 +112,66 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     })
   }
 
+  const renderCoursesByWeek = (customCoursesOfWeek?: VEvent[]) => {    
+    // const eventsOfWeek = getEventsOfWeek(courses, 0);
+
+    const courses = customCoursesOfWeek ? customCoursesOfWeek : coursesOfWeek;
+
+
+    let eventsOfWeekElements: JSX.Element[] = [];
+
+    for(let i = 0; i <= 5; i++) {
+      let offsetDay = moment().add(offsetWeek, 'days').weekday(i);
+      const offsetDayNumber = offsetDay.diff(moment(), 'days');
+
+      const eventsOfDay = getEventsOfDay(courses, offsetDayNumber);
+      const eventsOfDayElements = renderCoursesByDay(eventsOfDay);
+
+      const dayElement = <div style={{width: "16.6666667%"}}>
+        {offsetDay.format("dddd")}
+        {eventsOfDayElements}
+      </div>
+      eventsOfWeekElements.push(dayElement);
+    }
+    const firstWeekDay = moment().startOf('day').add(offsetWeek, 'days').weekday(0).format("DD/MM/YYYY");
+
+    const weekEvents = <>
+      <div style={{width: "100%"}}>
+        Semaine du {firstWeekDay} :
+        <br />
+        <br />
+        <div style={{display: 'flex', width: "100%"}}>
+          {eventsOfWeekElements}
+        </div>
+      </div>
+    </>
+  
+    return weekEvents;
+  }
+
   const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('dddd DD/MM/YYYY');
 
   return (
     <div>
-      <div onClick={() => setOffsetDay(0)} >
+      <div style={{right: 0, position: 'absolute'}}>
+        <button onClick={() => setIsDayView(day => day ? false : true)}> Vue {isDayView ? "par semaine" : "par jour"}</button>
+        <button className={styles.paginButton} onClick={() => minusOffset()}>{"<"}</button>
+        <button className={`${styles.paginButton} ${styles.buttonRight}`} onClick={() => addOffset()}> {">"} </button>
+      </div>
+      <div onClick={() => resetOffset()} >
         <h4>Revenir au jour actuel</h4>
       </div>
-      <div className={styles.buttons}>
-        <button className={styles.paginButton} onClick={() => setOffsetDay(val => val - 1) }>{"<"}</button>
-        <button className={`${styles.paginButton} ${styles.buttonRight}`} onClick={() => setOffsetDay(val => val + 1) }> {">"} </button>
-      </div>
-      Les cours du {dateOfDay} : 
-      {renderCourses()}
-    </div>
+
+      {
+        isDayView ? <>
+          Les cours du {dateOfDay} :
+          <div>
+            {renderCoursesByDay()}
+          </div>
+        </> : <div style={{display: 'flex', flexDirection: 'row'}}>
+            {renderCoursesByWeek()}
+          </div>
+      }
+      </div> 
   );
 }
