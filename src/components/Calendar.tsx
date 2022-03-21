@@ -153,7 +153,7 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
 
   return (
     <div>
-      <div style={{right: 0, position: 'absolute'}}>
+      <div style={{textAlign: 'right'}}>
         <button onClick={() => setIsDayView(day => day ? false : true)}> Vue {isDayView ? "par semaine" : "par jour"}</button>
         <button className={styles.paginButton} onClick={() => minusOffset()}>{"<"}</button>
         <button className={`${styles.paginButton} ${styles.buttonRight}`} onClick={() => addOffset()}> {">"} </button>

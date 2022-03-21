@@ -146,11 +146,11 @@ export default function Home() {
 					position="top-right"
 					reverseOrder={false}
 				/>
-				<div className={styles.reload}>
+				{/* <div className={styles.reload}>
 					<button onClick={() => forceReloadIcs()}>			
 						<Image alt="Rafraîchir" src={reload} height={10} width={10} />
 					</button>
-				</div>
+				</div> */}
 				<Calendar url={urlNetypareo} eventsIcs={icsEvents} />
 			</>
 		)
