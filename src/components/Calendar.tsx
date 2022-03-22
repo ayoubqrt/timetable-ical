@@ -109,9 +109,9 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
       const duration = moment().startOf('day').add(durationInMinutes, 'minutes').format('HH[H]mm');
   
       return <div key={cours.UID} className={classNames}>
-        <p>De {moment(cours.DTSTART).format('HH:mm')} à {moment(cours.DTEND).format('HH:mm')} ({duration})</p>
-        <p>{cours.LOCATION}</p>
-        <p>{cours.SUMMARY}</p>
+        <p className={styles.informationCard}>De {moment(cours.DTSTART).format('HH:mm')} à {moment(cours.DTEND).format('HH:mm')} ({duration})</p>
+        <p className={styles.informationCard}>{cours.LOCATION}</p>
+        <p className={styles.informationCard}>{cours.SUMMARY}</p>
       </div>
     })
   }

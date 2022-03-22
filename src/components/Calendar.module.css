@@ -57,7 +57,7 @@
         text-align: center;
     }
 
-    p {
+    .informationCard {
         line-height: 1;
     }
 }
