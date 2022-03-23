@@ -84,6 +84,7 @@ export default function Home() {
 				
 				setIcsEvents(calendar.VEVENT);
 				saveIcsInLocalStorage(calendar.VEVENT, urlIcs);
+				setIcsValid(true);
 	
 				setIsFetching(false);
 			} catch (err) {
