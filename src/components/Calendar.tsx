@@ -113,6 +113,7 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     const currentMoment = moment();
 
     const courses = customCoursesOfDay ? customCoursesOfDay : coursesOfDay;
+    const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('dddd DD/MM/YYYY');
 
     const eventsOfDayElements = courses.map((cours) => {
       const startCourse = moment(cours.DTSTART);
@@ -145,6 +146,8 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
         </div>
       </>;
       return dayEvents;
+    } else if(!customCoursesOfDay) {
+      return <p>Aucun cours le {dateOfDay}</p>
     }
 
     return null;
@@ -190,8 +193,6 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
 
     return null;  
   }
-
-  const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('dddd DD/MM/YYYY');
 
   return (
     <div>
