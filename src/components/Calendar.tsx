@@ -15,13 +15,17 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
   const [isDayView, setIsDayView] = useState(true);
 
   useEffect(() => {
+    const viewMode = getViewModeInLocalStorage();
+    if(viewMode) {
+      viewMode === "day" ? setIsDayView(true) : setIsDayView(false);
+    }
+
     setCourses(eventsIcs);
-    console.log("edt refreshed")
+    console.log("edt refreshed");
   }, [eventsIcs]);
 
   useEffect(() => {
-    const coursesOfDay = getEventsOfDay(courses, offsetDay);
-    
+    const coursesOfDay = getEventsOfDay(courses, offsetDay); 
     setCoursesOfDay(coursesOfDay);
   }, [offsetDay, courses]);
 
@@ -32,8 +36,22 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
   }, [offsetWeek, courses]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  })
+    const viewMode = isDayView ? "day" : "week";
+    saveViewModeInLocalStorage(viewMode);
+  }, [isDayView]);
+
+  const saveViewModeInLocalStorage = (viewMode: string) => {
+		localStorage.setItem("viewMode", viewMode);
+	}
+
+	const getViewModeInLocalStorage = () => {
+		const viewMode = localStorage.getItem("viewMode");
+		if(viewMode) {
+			return viewMode;
+		}
+
+		return null;
+	}
   
   const getEventsOfDay = (events: VEvent[], offsetDay: number) => {
     const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('LL');
@@ -95,15 +113,17 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     const currentMoment = moment();
 
     const courses = customCoursesOfDay ? customCoursesOfDay : coursesOfDay;
-  
-    return courses.map((cours) => {
+
+    const eventsOfDayElements = courses.map((cours) => {
       const startCourse = moment(cours.DTSTART);
       const endCourse = moment(cours.DTEND);
   
       const isCurrentCourse = currentMoment.isBetween(startCourse, endCourse);
   
-      let classNames = `${styles.card}`;
-      isCurrentCourse ? classNames += ` ${styles.currentCourse}` : null; 
+      // let classNames = `${styles.card}`;
+      // isCurrentCourse ? classNames += ` ${styles.currentCourse}` : null; 
+
+      const classNames = `${styles.card} ${isCurrentCourse && styles.currentCourse}`
   
       const durationInMinutes = endCourse.diff(startCourse, 'minutes');
       const duration = moment().startOf('day').add(durationInMinutes, 'minutes').format('HH[H]mm');
@@ -113,7 +133,21 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
         <p className={styles.informationCard}>{cours.LOCATION}</p>
         <p className={styles.informationCard}>{cours.SUMMARY}</p>
       </div>
-    })
+    });
+
+
+    if(eventsOfDayElements.length > 0) {
+      const dayEvents = <>
+        <div>
+          {!customCoursesOfDay && <>Les cours du {dateOfDay} : <br /><br /></>}
+
+            {eventsOfDayElements}
+        </div>
+      </>;
+      return dayEvents;
+    }
+
+    return null;
   }
 
   const renderCoursesByWeek = (customCoursesOfWeek?: VEvent[]) => {    
@@ -139,18 +173,22 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     }
     const firstWeekDay = moment().startOf('day').add(offsetWeek, 'days').weekday(0).format("DD/MM/YYYY");
 
-    const weekEvents = <>
-      <div style={{width: "100%"}}>
-        Semaine du {firstWeekDay} :
-        <br />
-        <br />
-        <div className={styles.eventsOfWeek}>
-          {eventsOfWeekElements}
+    if(eventsOfWeekElements.length > 0) {
+      const weekEvents = <>
+        <div style={{width: "100%"}}>
+          Semaine du {firstWeekDay} :
+          <br />
+          <br />
+          <div className={styles.eventsOfWeek}>
+            {eventsOfWeekElements}
+          </div>
         </div>
-      </div>
-    </>
-  
-    return weekEvents;
+      </>;
+
+      return weekEvents;
+    }
+
+    return null;  
   }
 
   const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('dddd DD/MM/YYYY');
@@ -168,7 +206,6 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
 
       {
         isDayView ? <>
-          Les cours du {dateOfDay} :
           <div>
             {renderCoursesByDay()}
           </div>

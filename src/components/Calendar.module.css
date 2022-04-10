@@ -40,6 +40,10 @@
     font-weight: bold;
 }
 
+.informationCard {
+    line-height: 1;
+}
+
 @media only screen and (min-width: 1024px) {
     .day {
         width: 16.6666667%;
@@ -58,6 +62,13 @@
     }
 
     .informationCard {
-        line-height: 1;
+        line-height: inherit;
+        font-size: 13px;
+    }
+}
+
+@media only screen and (min-width: 1366px) {
+    .informationCard {
+        font-size: 16px;
     }
 }

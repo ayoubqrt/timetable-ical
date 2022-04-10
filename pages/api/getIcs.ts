@@ -6,15 +6,12 @@ type Data = {
 }
 
 function isValidUrl(string: string) {
-  let url;
-  
   try {
-    url = new URL(string);
+    const url = new URL(string);
+    return url.protocol === "http:" || url.protocol === "https:";
   } catch (_) {
     return false;  
   }
-
-  return url.protocol === "http:" || url.protocol === "https:";
 }
 
 export default async function handler({ query: { url } }: {query: Data},
@@ -22,10 +19,9 @@ export default async function handler({ query: { url } }: {query: Data},
 ) {
   if(isValidUrl(url)) {
     const netypareoIcsRes = await fetch(url);
-    let content = null;
 
     if(netypareoIcsRes.ok) {
-      content = await netypareoIcsRes.text();
+      const content = await netypareoIcsRes.text();
       res.status(200).json({ ics: content });
     } else {
       res.status(400).json({ err: "Erreur lors de la requête" });
