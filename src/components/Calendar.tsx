@@ -5,7 +5,6 @@ import 'moment/locale/fr';
 import { VEvent } from './Home';
 moment().locale('fr');
 
-
 export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEvent[]}) {
   const [courses, setCourses] = useState<VEvent[]>([]);
   const [coursesOfDay, setCoursesOfDay] = useState<VEvent[]>([]);
@@ -21,7 +20,6 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     }
 
     setCourses(eventsIcs);
-    console.log("edt refreshed");
   }, [eventsIcs]);
 
   useEffect(() => {
@@ -40,75 +38,6 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     saveViewModeInLocalStorage(viewMode);
   }, [isDayView]);
 
-  const saveViewModeInLocalStorage = (viewMode: string) => {
-		localStorage.setItem("viewMode", viewMode);
-	}
-
-	const getViewModeInLocalStorage = () => {
-		const viewMode = localStorage.getItem("viewMode");
-		if(viewMode) {
-			return viewMode;
-		}
-
-		return null;
-	}
-  
-  const getEventsOfDay = (events: VEvent[], offsetDay: number) => {
-    const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('LL');
-
-    const eventsOfDay = events.filter((event) => {
-      const dateEvent = moment(event.DTSTART).format('LL');
-      
-      if(dateEvent === dateOfDay) {
-        return event;
-      }
-      return null;
-    });
-  
-    return eventsOfDay;
-  }
-
-  const addOffset = () => {
-    if(isDayView) {
-      setOffsetDay(val => val + 1);
-    } else {
-      setOffsetWeek(val => val + 7);
-    }
-  }
-
-  const minusOffset = () => {
-    if(isDayView) {
-      setOffsetDay(val => val - 1);
-    } else {
-      setOffsetWeek(val => val - 7);
-    }    
-  }
-
-  const resetOffset = () => {
-    if(isDayView) {
-      setOffsetDay(0);
-    } else {
-      setOffsetWeek(0);
-    }    
-  }
-
-  const getEventsOfWeek = (events: VEvent[], offsetWeek: number) => {
-    const weekStartDate = moment().startOf('day').add(offsetWeek, 'days').weekday(0);
-    const weekEndDate = moment().startOf('day').add(offsetWeek, 'days').weekday(6);
-
-    const eventsOfWeek = events.filter((event) => {
-      const dateEvent = moment(event.DTSTART);
-      
-      if(dateEvent.isBetween(weekStartDate, weekEndDate)) {
-        return event;
-      }
-      
-      return null;
-    });
-  
-    return eventsOfWeek;
-  }
-  
   const renderCoursesByDay = (customCoursesOfDay?: VEvent[]) => {    
     const currentMoment = moment();
 
@@ -120,10 +49,6 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
       const endCourse = moment(cours.DTEND);
   
       const isCurrentCourse = currentMoment.isBetween(startCourse, endCourse);
-  
-      // let classNames = `${styles.card}`;
-      // isCurrentCourse ? classNames += ` ${styles.currentCourse}` : null; 
-
       const classNames = `${styles.card} ${isCurrentCourse && styles.currentCourse}`
   
       const durationInMinutes = endCourse.diff(startCourse, 'minutes');
@@ -153,27 +78,35 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     return null;
   }
 
-  const renderCoursesByWeek = (customCoursesOfWeek?: VEvent[]) => {    
-    // const eventsOfWeek = getEventsOfWeek(courses, 0);
+  const renderDay = (weekDay: number, courses: VEvent[]) => {
+    let offsetDay = moment().add(offsetWeek, 'days').weekday(weekDay);
+    const offsetDayNumber = offsetDay.diff(moment(), 'days');
 
-    const courses = customCoursesOfWeek ? customCoursesOfWeek : coursesOfWeek;
+    const eventsOfDay = getEventsOfDay(courses, offsetDayNumber);
 
-
-    let eventsOfWeekElements: JSX.Element[] = [];
-
-    for(let i = 0; i <= 5; i++) {
-      let offsetDay = moment().add(offsetWeek, 'days').weekday(i);
-      const offsetDayNumber = offsetDay.diff(moment(), 'days');
-
-      const eventsOfDay = getEventsOfDay(courses, offsetDayNumber);
-      const eventsOfDayElements = renderCoursesByDay(eventsOfDay);
-
-      const dayElement = <div className={styles.day}>
-        <div className={styles.dayTitle}>{offsetDay.format("dddd DD/MM")}</div>
-        {eventsOfDayElements}
-      </div>
-      eventsOfWeekElements.push(dayElement);
+    if(weekDay >= 5 && eventsOfDay.length === 0) {
+      return null;
     }
+
+    const eventsOfDayElements = renderCoursesByDay(eventsOfDay);
+
+    const dayElement = <div className={styles.day}>
+      <div className={styles.dayTitle}>{offsetDay.format("dddd DD/MM")}</div>
+        {eventsOfDayElements}
+      </div>;
+
+    return dayElement;
+  }
+
+  const renderCoursesByWeek = (customCoursesOfWeek?: VEvent[]) => {
+    const courses = customCoursesOfWeek ? customCoursesOfWeek : coursesOfWeek;
+    const eventsOfWeekElements: JSX.Element[] = [];
+
+    for(let weekDay = 0; weekDay < 7; weekDay++) {
+      const dayElement = renderDay(weekDay, courses);
+      if(dayElement) eventsOfWeekElements.push(dayElement);
+    }
+
     const firstWeekDay = moment().startOf('day').add(offsetWeek, 'days').weekday(0).format("DD/MM/YYYY");
 
     if(eventsOfWeekElements.length > 0) {
@@ -192,6 +125,75 @@ export default function Calendar({url, eventsIcs}: {url: string, eventsIcs: VEve
     }
 
     return null;  
+  }
+
+  const getEventsOfDay = (events: VEvent[], offsetDay: number) => {
+    const dateOfDay = moment().startOf('day').add(offsetDay, 'days').format('LL');
+
+    const eventsOfDay = events.filter((event) => {
+      const dateEvent = moment(event.DTSTART).format('LL');
+      
+      if(dateEvent === dateOfDay) {
+        return event;
+      }
+      return null;
+    });
+  
+    return eventsOfDay;
+  }
+
+  const getEventsOfWeek = (events: VEvent[], offsetWeek: number) => {
+    const weekStartDate = moment().startOf('day').add(offsetWeek, 'days').weekday(0);
+    const weekEndDate = moment().startOf('day').add(offsetWeek, 'days').weekday(6);
+
+    const eventsOfWeek = events.filter((event) => {
+      const dateEvent = moment(event.DTSTART);
+      
+      if(dateEvent.isBetween(weekStartDate, weekEndDate)) {
+        return event;
+      }
+      
+      return null;
+    });
+  
+    return eventsOfWeek;
+  }
+
+  const saveViewModeInLocalStorage = (viewMode: string) => {
+		localStorage.setItem("viewMode", viewMode);
+	}
+
+	const getViewModeInLocalStorage = () => {
+		const viewMode = localStorage.getItem("viewMode");
+		if(viewMode) {
+			return viewMode;
+		}
+
+		return null;
+	}
+
+  const addOffset = () => {
+    if(isDayView) {
+      setOffsetDay(val => val + 1);
+    } else {
+      setOffsetWeek(val => val + 7);
+    }
+  }
+
+  const minusOffset = () => {
+    if(isDayView) {
+      setOffsetDay(val => val - 1);
+    } else {
+      setOffsetWeek(val => val - 7);
+    }    
+  }
+
+  const resetOffset = () => {
+    if(isDayView) {
+      setOffsetDay(0);
+    } else {
+      setOffsetWeek(0);
+    }    
   }
 
   return (
